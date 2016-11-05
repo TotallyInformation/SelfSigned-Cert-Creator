@@ -97,7 +97,7 @@ It is very important that the files in the CA folder are kept totally secure. If
 Similarly, any private key file absolutely must be kept secure or will be considered compromised.
 
 # License
-This code is Open Source under an Apache 2 License. Please see the apache2-license.txt file for details.
+This code is Open Source under an Apache 2 License. Please see the LICENSE file for details.
 
 You may not use this code except in compliance with the License. You may obtain an original copy of the License at
 
