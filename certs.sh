@@ -117,11 +117,13 @@ emailAddress = $EMAIL
 CN = $HOSTNAME.$DOT
 
 [alt_names]
-# Comment out the localhost/127 addresses if not required
 DNS.1 = $FQDN
 IP.1 = $FQDN
+# Comment out the localhost/127 addresses if not required
 DNS.2 = localhost
+DNS.3 = 127.0.0.1
 IP.2 = 127.0.0.1
+# If using for email sign/encrypt
 #email.1 = copy
 #email.2 = me@$HOSTNAME.$DOT
 EOL
