@@ -181,7 +181,7 @@ echo "  as this is self-signed, use of ca opt isn't required as it is included i
 
 echo " "
 echo "Tidy tmp"
-#rm -R tmp
+rm -R tmp
 
 # ------------- Client ------------- #
 # Need one of these for each client  #
