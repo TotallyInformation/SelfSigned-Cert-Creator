@@ -94,16 +94,18 @@ default_bits = 2048
 prompt = no
 default_md = sha256
 x509_extensions = v3_req
+
+distinguished_name = dn
+
+[v3_req]
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
+subjectAltName = @alt_names
 
 # Adjust to need @see https://www.openssl.org/docs/man1.1.0/apps/x509v3_config.html
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
 # Adjust to need @see https://www.openssl.org/docs/man1.1.0/apps/x509v3_config.html
 extendedKeyUsage = serverAuth, clientAuth, codeSigning, emailProtection, timeStamping, msCodeInd, msCTLSign, msEFS
-
-distinguished_name = dn
-subjectAltName = @alt_names
 
 [dn]
 C = $COUNTRY
