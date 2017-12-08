@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Create self-signed certificates and keys for a CA and a server
 # Primarily for using with SSL/TLS to secure communications
@@ -9,7 +9,36 @@
 # Use as: bash make-certs.sh 'localhost.daplie.com'
 #
 # Author: Julian Knight, Totally Information, 2016-11-05
+# Updates:
+#   v1.1 2017-12-08: JK change to add SAN as now required by Chrome
 # License: MIT, may be freely reused.
+
+echo "**********************************************************************************"
+echo "* Create a Certificate Authority certificate and keys along with a server and    *"
+echo "* a client certificate based on the CA.                                          *"
+echo "*                                                                                *"
+echo "* Use the resulting server certificate for running servers (e.g. Apache, NGINX,  *"
+echo "* Node.JS, ExpressJS, etc.) with SSL/TLS encrypted connections.                  *"
+echo "*                                                                                *"
+echo "* Use the CA's PUBLIC certificate on every client that may access the server by  *"
+echo "* importing the CA public certificate into the client's trusted root certificate *"
+echo "* store. This stops clients (e.g. browsers) from complaining that the server's   *"
+echo "* certificate is 'untrusted'.                                                    *"
+echo "*                                                                                *"
+echo "* This saves you from having to purchase an expensive certificate from a         *"
+echo "* publically trusted certificate authority. It also saves the problems           *"
+echo "* with trying to get Let's Encrypt free certificates working on private          *"
+echo "* networks.                                                                      *"
+echo "*                                                                                *"
+echo "* This script creates the following folders under the current location:          *"
+echo "*    ./server   :: Server certificates                                           *"
+echo "*    ./client   :: Client certificates and CA public certificate                 *"
+echo "*    ./ca       :: CA Certificates - keep these safe, OFFLINE!                   *"
+echo "*                  The CA certificates can (and should) be reused to create new  *"
+echo "*                  server and client certificates.                               *"
+echo "**********************************************************************************"
+echo "* VERSION: 1.1 2017-11-08                                                        *"
+echo "**********************************************************************************"
 
 if [[ ! ${1+x} ]]; then
 	echo "No FQDN parameter given - exiting"
@@ -19,6 +48,17 @@ else
 fi
 
 FQDN=$1
+
+# PLEASE UPDATE THE FOLLOWING VARIABLES FOR YOUR NEEDS.
+HOSTNAME="totallyinformation"
+DOT="net"
+COUNTRY="UK"
+STATE="South Yorks"
+CITY="Sheffield"
+ORGANIZATION="Totally Information"
+ORGANIZATION_UNIT="IT"
+EMAIL="webmaster@$HOSTNAME.$DOT"
+# ----------------------------------------------------
 
 echo "Make directories to work from"
 mkdir -p ./{server,client,ca,tmp}
@@ -41,15 +81,54 @@ openssl req \
   -days 9999 \
   -key  ca/my-private-root-ca.privkey.pem \
   -out  ca/my-private-root-ca.cert.pem \
-  -subj "/C=UK/ST=South Yorks/L=Sheffield/O=Totally Information/CN=totallyinformation.net"
+  -subj "/C=$COUNTRY/ST=$STATE/L=$CITY/O=$ORGANIZATION/CN=$HOSTNAME.$DOT"
 
-echo "Import ca/my-private-root-ca.cert.pem to Windows Trusted Root store if required" 
+echo "Import ca/my-private-root-ca.cert.pem to Windows Trusted Root store if required"
+
+echo "Create temp OpenSSL configuration file"
+
+# Required as this is the only way to add SubjectAltName fields which are now required
+# by Chrome.
+cat >tmp/ssl.cnf <<EOL
+default_bits = 2048
+prompt = no
+default_md = sha256
+x509_extensions = v3_req
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+
+# Adjust to need @see https://www.openssl.org/docs/man1.1.0/apps/x509v3_config.html
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+# Adjust to need @see https://www.openssl.org/docs/man1.1.0/apps/x509v3_config.html
+extendedKeyUsage = serverAuth, clientAuth, codeSigning, emailProtection, timeStamping, msCodeInd, msCTLSign, msEFS
+
+distinguished_name = dn
+subjectAltName = @alt_names
+
+[dn]
+C = $COUNTRY
+ST = $STATE
+L = $CITY
+O = $ORGANIZATION
+OU = $ORGANIZATION_UNIT
+emailAddress = $EMAIL
+CN = $HOSTNAME.$DOT
+
+[alt_names]
+# Comment out the localhost/127 addresses if not required
+DNS.1 = $FQDN
+IP.1 = $FQDN
+DNS.2 = localhost
+IP.2 = 127.0.0.1
+#email.1 = copy
+#email.2 = me@$HOSTNAME.$DOT
+EOL
 
 # ------------- Server ------------- #
 # Need one of these for each server  #
 # ---------------------------------- #
 
-echo "Create a Server Private Key"
+echo "Create a Server Private Key - KEEP THIS SECURE ON THE SERVER!"
 openssl genrsa \
   -out server/privkey.pem \
   2048
@@ -61,7 +140,8 @@ echo "Create a request from your Server, which your Root CA will sign"
 openssl req -new \
   -key  server/privkey.pem \
   -out  tmp/csr.pem \
-  -subj "/C=UK/ST=South Yorks/L=Sheffield/O=Totally Information/CN=${FQDN}"
+  -config tmp/ssl.cnf
+  #-subj "/C=$COUNTRY/ST=$STATE/L=$CITY/O=$ORGANIZATION/CN=${FQDN}"
 
 echo "Sign the request from Device with your Root CA, creates the actual cert"
 openssl x509 \
@@ -72,7 +152,7 @@ openssl x509 \
   -out   server/cert.pem \
   -days  9999
 
-# Create a combined pfx file for convenience
+echo "Create a combined pfx file for convenience"
 openssl pkcs12 -export \
 	-certfile ca/my-private-root-ca.cert.pem \
 	-inkey server/privkey.pem \
@@ -96,8 +176,8 @@ rm -R tmp
 # Need one of these for each client  #
 # ---------------------------------- #
 
-# Create a public key in case you want a client to be able to encrypt messages to this server.
-# Not required for SSL/TLS
+echo "Create a public key in case you want a client to be able to encrypt messages to this server."
+echo "Not required for simply accessing SSL/TLS web pages"
 openssl rsa -pubout \
   -in  server/privkey.pem \
   -out client/server-pubkey.pem
@@ -112,7 +192,12 @@ openssl x509 \
 	-out client/my-private-root-ca.crt
 
 echo "Import client/my-private-root-ca.crt"
-echo " to client devices to make them recognise the private CA"
+echo "  to client devices to make them recognise the private CA"
+echo "The CA cert is also available in the certificate the server sends to the client."
+echo " "
+echo "**********************************************************************************"
+echo "* The CA cert must be imported to every client's trusted root certificate store. *"
+echo "**********************************************************************************"
 
 # ------------- TESTING ------------- #
 # Test your HTTPS effortlessly
