@@ -114,7 +114,6 @@ L = $CITY
 O = $ORGANIZATION
 OU = $ORGANIZATION_UNIT
 emailAddress = $EMAIL
-CN = $HOSTNAME.$DOT
 
 [alt_names]
 DNS.1 = $FQDN
