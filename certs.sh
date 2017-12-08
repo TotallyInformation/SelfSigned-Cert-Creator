@@ -128,11 +128,13 @@ EOL
 # Need one of these for each server  #
 # ---------------------------------- #
 
+echo " "
 echo "Create a Server Private Key - KEEP THIS SECURE ON THE SERVER!"
 openssl genrsa \
   -out server/privkey.pem \
   2048
 
+echo " "
 echo "Create a request from your Server, which your Root CA will sign"
 # 1 for each domain such as 192.168.1.167, example.com, *.example.com, awesome.example.com
 # NOTE: You MUST match CN to the domain name or ip address you want to use
@@ -143,6 +145,7 @@ openssl req -new \
   -config tmp/ssl.cnf
   #-subj "/C=$COUNTRY/ST=$STATE/L=$CITY/O=$ORGANIZATION/CN=${FQDN}"
 
+echo " "
 echo "Sign the request from Device with your Root CA, creates the actual cert"
 openssl x509 \
   -CAcreateserial -req \
@@ -152,6 +155,7 @@ openssl x509 \
   -out   server/cert.pem \
   -days  9999
 
+echo " "
 echo "Create a combined pfx file for convenience"
 openssl pkcs12 -export \
 	-certfile ca/my-private-root-ca.cert.pem \
@@ -160,24 +164,28 @@ openssl pkcs12 -export \
 	-out server/cert.pfx \
 	-name "Self-Signed Server Certificate"
 
+echo " "
 echo "Copy root ca cert to server & client as chain.pem"
 rsync -a ca/my-private-root-ca.cert.pem server/chain.pem
 rsync -a ca/my-private-root-ca.cert.pem client/chain.pem
 echo "Create a server full chain cert for SSL/TLS use"
 cat server/cert.pem server/chain.pem > server/fullchain.pem
 
+echo " "
 echo "Use in Node.JS as: sslOpts = { key: 'server/privkey.pem', cert: 'server/fullchain.pem' }"
 echo "  as this is self-signed, use of ca opt isn't required as it is included in the chain"
 
+echo " "
 echo "Tidy tmp"
-rm -R tmp
+#rm -R tmp
 
 # ------------- Client ------------- #
 # Need one of these for each client  #
 # ---------------------------------- #
 
+echo " "
 echo "Create a public key in case you want a client to be able to encrypt messages to this server."
-echo "Not required for simply accessing SSL/TLS web pages"
+echo "  Not required for simply accessing SSL/TLS web pages"
 openssl rsa -pubout \
   -in  server/privkey.pem \
   -out client/server-pubkey.pem
@@ -185,19 +193,24 @@ openssl rsa -pubout \
 #echo "Copy root ca cert to client as chain.pem"
 #rsync -a ca/my-private-root-ca.cert.pem client/chain.pem
 
-echo "create DER format crt for iOS Mobile Safari, etc"
+echo " "
+echo "Create DER format crt for iOS Mobile Safari, etc"
 openssl x509 \
 	-outform der \
 	-in  ca/my-private-root-ca.cert.pem \
 	-out client/my-private-root-ca.crt
 
-echo "Import client/my-private-root-ca.crt"
+echo " "
+echo " "
+echo "You can now import client/my-private-root-ca.crt"
 echo "  to client devices to make them recognise the private CA"
 echo "The CA cert is also available in the certificate the server sends to the client."
 echo " "
 echo "**********************************************************************************"
 echo "* The CA cert must be imported to every client's trusted root certificate store. *"
 echo "**********************************************************************************"
+echo " "
+echo " "
 
 # ------------- TESTING ------------- #
 # Test your HTTPS effortlessly
