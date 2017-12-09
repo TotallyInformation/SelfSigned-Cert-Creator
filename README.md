@@ -1,6 +1,11 @@
 # SelfSigned-Cert-Creator
 A short script to make it easy to create a viable, trusted self-signed certificate that can be used for SSL/TLS in particular.
 
+# UPDATE 2017-12-09
+
+I've finally managed to update this script to correctly add Subject Alternate Names so that the resulting certificates
+work correctly with Chrome and other modern browsers.
+
 # Quickstart
 
 1. Run the script giving the web server's IP address/domain the parameter (e.g. 192.168.1.10, myweb.mydomain.com, *.mydomain.com).
@@ -24,7 +29,7 @@ If you don't do anything on devices accessing your server, you will still get wa
 
 You only need to run the full script once. Thereafter, you don't need the CA lines because you already have a CA certificate and key.
 
-The script will create a number of folders relative to the location of the script file: 
+The script will create a number of folders relative to the location of the script file:
 - `tmp` - deleted at the end of the script
 - `ca` - contains the CA related files - **must be kept secure**, best kept offline until needed next time
 - `server` - the certificate and key files required by the server to work over HTTPS, move to a convenient location
@@ -74,7 +79,7 @@ To get rid of any browser warnings, you must load the CA certificate into a posi
 
 Copy the file `client/my-private-root-ca.crt` to the Windows PC. Right-click and choose `Install Certificate`. Choose whether you want this for just the current user or for all users of this PC (Local Machine, You will need local admin rights for this). On the next stage, choose "Place all certificates in the following store" and click the browse button. Choose "Trusted Root Certification Authorities" and click OK. Continuing should result in a message that the certificate as been successfully installed.
 
-Restart your browser and any certificate errors when connecting to your server should now have gone away. This works for Edge, Internet Explorer and Chrome. 
+Restart your browser and any certificate errors when connecting to your server should now have gone away. This works for Edge, Internet Explorer and Chrome.
 
 Firefox has its own certificate store. It is also the only browser where you can add a permanent exception to certificate warnings. But if you want to fix it properly, Go to Options, Advanced, Certificates. Click on View Certificates, Import. Select "Trust this CA to identify web sites". You will at least need to open a new tab if you already had the site open.
 
@@ -102,7 +107,7 @@ This code is Open Source under an Apache 2 License. Please see the LICENSE file 
 You may not use this code except in compliance with the License. You may obtain an original copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Please see the License for the specific language governing permissions and limitations under the License.
 
 # Author
