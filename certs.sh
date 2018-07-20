@@ -235,7 +235,7 @@ function create_ca_cnf {
   copy_extensions = copy   # Copy extensions specified in the certificate request
 
   [ root_ca_extensions ]
-  # Extensions for a typical CA (`man x509v3_config`).
+  # Extensions for a typical CA (man x509v3_config).
   subjectKeyIdentifier = hash
   authorityKeyIdentifier = keyid:always,issuer
   basicConstraints = critical, CA:true
