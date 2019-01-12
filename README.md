@@ -1,6 +1,12 @@
 # SelfSigned-Cert-Creator
 A short script to make it easy to create a viable, trusted self-signed certificate that can be used for SSL/TLS in particular.
 
+# UPDATE 2019-01-12
+
+I've discovered another repository that has some much better functions than mine and is more up-to-date.
+
+Please try out [FiloSottile/mkcert](https://github.com/FiloSottile/mkcert) before trying this.
+
 # UPDATE 2017-12-09
 
 I've finally managed to update this script to correctly add Subject Alternate Names so that the resulting certificates
